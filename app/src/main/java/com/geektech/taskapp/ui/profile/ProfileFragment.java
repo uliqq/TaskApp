@@ -1,6 +1,8 @@
-package com.geektech.taskapp.ui;
+package com.geektech.taskapp.ui.profile;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -21,7 +23,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class ProfileFragment extends Fragment {
 
-private FragmentProfileBinding binding;
+    private FragmentProfileBinding binding;
+    private int OPENED_GALLERY;
+    private Uri uri;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -56,7 +60,17 @@ private FragmentProfileBinding binding;
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivity(intent);
+        startActivityForResult(intent, OPENED_GALLERY);
 
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == OPENED_GALLERY && resultCode == Activity.RESULT_OK && data != null) {
+            uri = data.getData();
+            binding.profileImage.setImageURI(uri);
+
+        }
     }
 }

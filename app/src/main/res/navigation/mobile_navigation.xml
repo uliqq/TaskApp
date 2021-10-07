@@ -24,12 +24,12 @@
         tools:layout="@layout/fragment_notifications" />
     <fragment
         android:id="@+id/taskFragment"
-        android:name="com.geektech.taskapp.ui.TaskFragment"
+        android:name="com.geektech.taskapp.ui.NewsFragment"
         android:label="fragment_task"
-        tools:layout="@layout/fragment_task" />
+        tools:layout="@layout/fragment_news" />
     <fragment
         android:id="@+id/navigation_profile"
-        android:name="com.geektech.taskapp.ui.ProfileFragment"
+        android:name="com.geektech.taskapp.ui.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
 </navigation>
