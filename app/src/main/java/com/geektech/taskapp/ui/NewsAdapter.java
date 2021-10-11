@@ -26,9 +26,14 @@ import java.util.ArrayList;
 import java.util.Date;
 
 
-public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> implements View.OnLongClickListener {
+public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
 
     private ArrayList<News> list = new ArrayList<>();
+    private onItemClick click;
+
+    public void setListener (onItemClick click) {
+        this.click = click;
+    }
 
     public NewsAdapter() {
 
@@ -39,20 +44,18 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> im
     public NewsAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_news, parent, false);
         ViewHolder holder = new ViewHolder(view);
-        holder.itemView.setOnLongClickListener(NewsAdapter.this);
 
         return holder;
     }
 
-    @SuppressLint("ResourceAsColor")
     @Override
     public void onBindViewHolder(@NonNull NewsAdapter.ViewHolder holder, int position) {
         holder.bind(list.get(position));
 
         if (position % 2 == 0) {
-            holder.itemView.setBackgroundColor(R.color.purple_700);
+            holder.itemView.setBackgroundResource(android.R.color.darker_gray);
         } else {
-            holder.itemView.setBackgroundColor(R.color.purple_200);
+            holder.itemView.setBackgroundResource(R.color.white);
         }
 
     }
@@ -66,56 +69,52 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> im
         list.add(0, news);
         notifyItemInserted(0);
     }
-    @Override
-    public boolean onLongClick(View view) {
-        AlertDialog deleteBox = new AlertDialog.Builder();
 
-        ViewHolder holder = (ViewHolder) view.getTag();
-        if (view.getId() == holder.itemView.getId()) {
-            deleteBox.setTitle("Delete");
-            deleteBox.setMessage("Do you want to delete?");
-            deleteBox.setIcon(R.drawable.ic_baseline_delete_24);
-
-            deleteBox.setButton("Delete", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    list.remove(holder.getPosition());
-                    dialog.dismiss();
-                    notifyDataSetChanged();
-                    Toast.makeText(deleteBox.getContext(), "Item has been deleted successfully", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            deleteBox.setButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
-            deleteBox.create();
-            return false;
-
+    public void removeItem(int position) {
+            this.list.remove(position);
+            notifyDataSetChanged();
         }
 
-        return false;
+    public News getItem(int position) {
+        return list.get(position);
     }
+
+    public void updateItem(int pos, News news) {
+        list.set(pos, news);
+        notifyItemChanged(pos);
+    }
+
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView textTitle;
-        private TextView textTime;
+            private TextView textTitle;
+            private TextView textTime;
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            textTitle = itemView.findViewById(R.id.textTitle);
-            textTime = itemView.findViewById(R.id.textTime);
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                textTitle = itemView.findViewById(R.id.textTitle);
+                textTime = itemView.findViewById(R.id.textTime);
+            }
+
+            public void bind(News news) {
+                textTitle.setText(news.getTitle());
+
+                itemView.setOnLongClickListener(view -> {
+                    click.onLongClick(getAdapterPosition());
+                return true;
+                });
+
+                String time = (String) android.text.format.DateFormat.format("EEE, MMM d, yyyy 'y'", new Date(news.getCreatedAt()));
+                textTime.setText(time);
+                itemView.setOnClickListener(view -> {
+                    click.onClick(getAdapterPosition());
+                });
+
+            }
         }
+    public interface onItemClick {
 
-        public void bind(News news) {
-            textTitle.setText(news.getTitle());
+        void onLongClick(int position);
 
-            String time = (String) android.text.format.DateFormat.format("EEE, MMM d, yyyy 'y'", new Date(news.getCreatedAt()));
-            textTime.setText(time);
-
-        }
+        void onClick(int position);
     }
-}
+    }

@@ -1,11 +1,14 @@
 package com.geektech.taskapp.ui.home;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,13 +28,15 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.jetbrains.annotations.NotNull;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements NewsAdapter.onItemClick {
 
     private FragmentHomeBinding binding;
     private NewsAdapter adapter;
+    private boolean isTaskChanged = false;
+    private int pos;
 
     @Override
-    public void onCreate(@Nullable  Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         adapter = new NewsAdapter();
     }
@@ -60,7 +65,8 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onClick(View v) {
-                openFragment();
+                openFragment(null);
+                isTaskChanged = false;
             }
         });
 
@@ -69,7 +75,12 @@ public class HomeFragment extends Fragment {
             public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
                 News news = (News) result.getSerializable("news");
                 Log.e("Home", "text = " + news.getTitle());
-                adapter.addItem(news);
+                if (isTaskChanged) {
+                    adapter.updateItem(pos, news);
+                } else {
+
+                    adapter.addItem(news);
+                }
             }
         });
         initList();
@@ -79,16 +90,50 @@ public class HomeFragment extends Fragment {
 
         RecyclerView recyclerView = binding.recyclerView;
         recyclerView.setAdapter(adapter);
+        adapter.setListener(this);
 
     }
 
-    private void openFragment() {
+    private void openFragment(News news) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("task", news);
         NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
-        navController.navigate(R.id.taskFragment);
+        navController.navigate(R.id.taskFragment, bundle);
     }
 
 
+    @Override
+    public void onLongClick(int position) {
 
+        AlertDialog.Builder deleteBox = new AlertDialog.Builder(requireActivity());
 
+        deleteBox.setTitle("Delete");
+        deleteBox.setMessage("Do you want to delete?");
+        deleteBox.setIcon(R.drawable.ic_baseline_delete_24);
+        deleteBox.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                adapter.removeItem(position);
+                dialog.dismiss();
+                Toast.makeText(deleteBox.getContext(), "Item has been deleted successfully", Toast.LENGTH_SHORT).show();
+            }
+        });
+        deleteBox.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        })
+                .show();
+    }
+
+    @Override
+    public void onClick(int position) {
+        isTaskChanged = true;
+        pos = position;
+        News news = adapter.getItem(position);
+        openFragment(news);
+
+    }
 }

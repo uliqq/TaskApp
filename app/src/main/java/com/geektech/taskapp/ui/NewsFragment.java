@@ -30,29 +30,36 @@ public class NewsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentNewsBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
-        return root;
+        View view = binding.getRoot();
+        return view;
 
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         EditText editText = binding.editText;
         Button button = binding.btnSave;
         button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 sendData();
             }
         });
+News data = (News) getArguments().getSerializable("task");
+if (data != null) {
+    binding.editText.setText(data.getTitle());
+
+}
+
+
 
     }
 
     private void sendData() {
         String text = binding.editText.getText().toString();
         News news = new News(text);
+        news.setCreatedAt(System.currentTimeMillis());
         Bundle bundle = new Bundle();
         bundle.putSerializable("news", news);
         getParentFragmentManager().setFragmentResult("rk_news", bundle);
