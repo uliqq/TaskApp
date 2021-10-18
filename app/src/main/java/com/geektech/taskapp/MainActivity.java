@@ -15,6 +15,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.geektech.taskapp.databinding.ActivityMainBinding;
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -63,10 +64,16 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-        if (true)
+Prefs prefs = new Prefs(this);
+        if (!prefs.isBoardShown())
             navController.navigate(R.id.boardFragment);
+
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            navController.navigate(R.id.loginFragment);
+        }
     }
+
+
 
     @Override
     public boolean onSupportNavigateUp() {

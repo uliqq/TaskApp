@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.geektech.taskapp.Prefs;
 import com.geektech.taskapp.R;
 import com.geektech.taskapp.databinding.FragmentBoardBinding;
 import com.tbuonomo.viewpagerdotsindicator.DotsIndicator;
@@ -62,6 +63,8 @@ public class BoardFragment extends Fragment implements BoardAdapter.OnClick {
     }
 
     private void skip() {
+        Prefs prefs = new Prefs(requireContext());
+        prefs.saveBoardState();
         NavController navController = Navigation.findNavController((Activity) requireContext(),R.id.nav_host_fragment_activity_main);
         navController.navigateUp();
     }

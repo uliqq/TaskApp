@@ -1,76 +1,115 @@
 package com.geektech.taskapp.ui.profile;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+
+import com.bumptech.glide.Glide;
+import com.geektech.taskapp.Prefs;
 import com.geektech.taskapp.R;
 import com.geektech.taskapp.databinding.FragmentProfileBinding;
-
-import org.jetbrains.annotations.NotNull;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
-    private int OPENED_GALLERY;
-    private Uri uri;
+    private ActivityResultLauncher<String> mGetContent;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
+        // Inflate the layout for this fragment
         binding = FragmentProfileBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
-        return root;
-
+        return binding.getRoot();
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ImageView profileIv = binding.profileImage;
-        profileIv.setOnClickListener(new View.OnClickListener() {
+        setLocalContent();
+        initEditTextListeners();
+
+        binding.avatarIv.setOnClickListener(v -> {
+            pickImage();
+        });
+        setImage();
+
+        binding.btnSingOut.setOnClickListener(v -> {
+signOut();
+        });
+    }
+
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
+        Toast.makeText(requireActivity(),"Signed Out", Toast.LENGTH_SHORT).show();
+    }
+
+    private void initEditTextListeners() {
+        binding.nameEt.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View v) {
-                openGallery();
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Prefs prefs = new Prefs(requireContext());
+                prefs.saveName(editable.toString());
+                Toast.makeText(requireContext(), editable.toString(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void openGallery() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(intent, OPENED_GALLERY);
+    private void setLocalContent() {
+        Prefs prefs = new Prefs(requireContext());
+        String uri = prefs.getImage();
+        String name = prefs.getName();
 
+        Glide.with(requireActivity())
+                .load(uri)
+                .circleCrop()
+                .placeholder(R.drawable.ic_launcher_foreground)
+                .into(binding.avatarIv);
+
+        binding.nameEt.setText(name);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == OPENED_GALLERY && resultCode == Activity.RESULT_OK && data != null) {
-            uri = data.getData();
-            binding.profileImage.setImageURI(uri);
+    private void setImage() {
+        mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
+                new ActivityResultCallback<Uri>() {
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        Glide.with(requireActivity())
+                                .load(uri)
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_launcher_foreground)
+                                .into(binding.avatarIv);
+                        Prefs prefs = new Prefs(requireContext());
+                        prefs.saveAvatarImage(uri);
+                    }
+                });
+    }
 
-        }
+    private void pickImage() {
+        mGetContent.launch("image/*");
     }
 }
